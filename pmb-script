@@ -1,0 +1,80 @@
+<?php
+/**
+ * Author: Simo Jakovic
+ * Author URI:  https://jakovic.com
+ * Description: PHP script used for backup of mysql database using mysql dump command and zip utility
+ * Created: Mar 30, 2020
+ * Version:     1.0.0
+ * Tested: PHP 7.3
+ */
+
+# Disable error reporting
+error_reporting(0);
+
+# Config parameters
+$host = 'localhost';
+$port = 8889;
+$user = '';
+$pass = '';
+$dbName = '';
+$dsn = sprintf('mysql:dbname=%s;host=%s;port=%s;charset=utf8', $dbName, $host, $port);
+$backupPath = '';// example: /var/backup
+$backupFilename = sprintf('%s/%s-%s.sql', $backupPath, $dbName, date('Y-m-d-His'));
+$zipFilename = str_replace('.sql', '.zip', $backupFilename);
+
+print "Checking backup directory..." . PHP_EOL;
+
+if (!file_exists($backupPath)) {
+    if (!mkdir($backupPath, 0777, true)) {
+        print sprintf('Error creating backup directory "%s"', $backupPath);
+        exit;
+    }
+}
+
+print "Checking database..." . PHP_EOL;
+
+try {
+    $pdo = new PDO($dsn, $user, $pass);
+} catch (PDOException $e) {
+    print "Error connecting to database" . PHP_EOL;
+    print "Error message: " . $e->getMessage();
+    exit;
+}
+
+# Starting backup
+print "Starting backup..." . PHP_EOL;
+
+$backupCommand = sprintf(
+    'mysqldump -h %s -u %s -p%s %s > %s',
+    $host,
+    $user,
+    $pass,
+    $dbName,
+    $backupFilename
+);
+
+shell_exec($backupCommand);
+
+if(file_exists($backupFilename)) {
+    print sprintf('Backup file "%s" created.%s', $backupFilename, PHP_EOL);
+} else {
+    print sprintf('Error creating backup file "%s"', $backupFilename);
+    exit;
+}
+
+$zipCommand = sprintf('zip %s %s', $zipFilename, $backupFilename);
+
+shell_exec($zipCommand);
+
+if(file_exists($zipFilename)) {
+    print sprintf('ZIP file "%s" created.%s', $zipFilename, PHP_EOL);
+} else {
+    print sprintf('Error creating ZIP file "%s"', $zipFilename);
+    exit;
+}
+
+
+
+
+
+
