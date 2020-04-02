@@ -68,6 +68,10 @@ shell_exec($zipCommand);
 
 if(file_exists($zipFilename)) {
     print sprintf('ZIP file "%s" created.%s', $zipFilename, PHP_EOL);
+    
+    # Remove .sql file
+    print sprintf('Removing "%s" file.', $backupFilename) . PHP_EOL;
+    unlink($backupFilename);
 } else {
     print sprintf('Error creating ZIP file "%s"', $zipFilename);
     exit;
